@@ -1,11 +1,14 @@
 #[tokio::test]
 async fn health_check_succeeds() {
-    spawn_app();
+    let port = spawn_app();
 
     let client = reqwest::Client::new();
 
     let response = client
-        .get("http://localhost:8000/health_check")
+        .get(format!(
+            "http://localhost:{}/health_check",
+            port.to_string()
+        ))
         .send()
         .await
         .unwrap();
@@ -13,7 +16,11 @@ async fn health_check_succeeds() {
     assert!(response.status().is_success());
 }
 
-fn spawn_app() {
-    let server = zero2prod::run().expect("Failed to bind address");
+fn spawn_app() -> u16 {
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("Failed to bind");
+    let port = listener.local_addr().unwrap().port();
+    println!("Running on port: {}", port);
+    let server = zero2prod::run(listener).expect("Failed to bind address");
     let _ = tokio::spawn(server);
+    port
 }
