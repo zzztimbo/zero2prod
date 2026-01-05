@@ -4,5 +4,6 @@ use zero2prod::run;
 async fn main() -> Result<(), std::io::Error> {
     env_logger::init();
 
-    run()?.await
+    let listener = std::net::TcpListener::bind("127.0.0.1:8000")?;
+    run(listener)?.await
 }
